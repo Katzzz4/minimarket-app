@@ -18,7 +18,7 @@ class DatabaseSeederData extends Seeder
         $owner = User::create([
             'name' => 'Pak Jayusman',
             'email' => 'owner@minimarket.test',
-            'password' => bcrypt('password'),
+            'password' => 'password',
             'branch_id' => $branch->id,
         ]);
 
