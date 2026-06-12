@@ -70,4 +70,19 @@ class TransactionController extends Controller
             return redirect()->route('transactions.index')->with('success', 'Transaksi berhasil. Invoice: ' . $transaction->invoice_number);
         });
     }
+    public function index(Request $request)
+    {
+        $transactions = Transaction::with('branch', 'user')
+            ->when(auth()->user()->hasRole('Manajer Toko'), function ($q) {
+                $q->where('branch_id', auth()->user()->branch_id);
+            })
+            ->when(auth()->user()->hasRole('Kasir'), function ($q) {
+                $q->where('branch_id', auth()->user()->branch_id)
+                    ->where('user_id', auth()->id());
+            })
+            ->latest()
+            ->paginate(15);
+
+        return view('transactions.index', compact('transactions'));
+    }
 }
