@@ -72,16 +72,21 @@ class TransactionController extends Controller
     }
     public function index(Request $request)
     {
-        $transactions = Transaction::with('branch', 'user')
+        $transactions = Transaction::with('branch', 'user', 'items.product')
             ->when(auth()->user()->hasRole('Manajer Toko'), function ($q) {
                 $q->where('branch_id', auth()->user()->branch_id);
             })
-            ->when(auth()->user()->hasRole('Kasir'), function ($q) {
-                $q->where('branch_id', auth()->user()->branch_id)
-                    ->where('user_id', auth()->id());
+            ->when(auth()->user()->hasRole('Supervisor'), function ($q) {
+                $q->where('branch_id', auth()->user()->branch_id);
+            })
+            ->when($request->filled('start_date'), function ($q) use ($request) {
+                $q->whereDate('created_at', '>=', $request->start_date);
+            })
+            ->when($request->filled('end_date'), function ($q) use ($request) {
+                $q->whereDate('created_at', '<=', $request->end_date);
             })
             ->latest()
-            ->paginate(15);
+            ->paginate(20);
 
         return view('transactions.index', compact('transactions'));
     }
