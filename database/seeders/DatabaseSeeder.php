@@ -20,6 +20,8 @@ class DatabaseSeeder extends Seeder
       DatabaseSeederData::class,
       DemoUserSeeder::class,
       ProductSeeder::class,
+      TransactionSeeder::class,
     ]);
   }
+  
 }
