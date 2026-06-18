@@ -9,6 +9,7 @@ use App\Models\TransactionItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use App\Models\Branch;
 
 class TransactionController extends Controller
 {
@@ -88,6 +89,18 @@ class TransactionController extends Controller
             ->latest()
             ->paginate(20);
 
-        return view('transactions.index', compact('transactions'));
+        $branches = auth()->user()->hasRole('Owner') ? Branch::all() : collect();
+
+        return view('transactions.index', compact('transactions', 'branches'));
+    }
+
+    public function pos()
+    {
+        $products = \App\Models\ProductStock::with('product')
+            ->where('branch_id', auth()->user()->branch_id)
+            ->where('quantity', '>', 0)
+            ->get();
+
+        return view('pos.index', compact('products'));
     }
 }
