@@ -24,21 +24,13 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    /*
-    |----------------------------------------------------------
-    | Branch & User — Owner only
-    |----------------------------------------------------------
-    */
+    // Branch & User — Owner only
     Route::middleware('role:Owner')->group(function () {
         Route::resource('branches', BranchController::class);
         Route::resource('users', UserController::class);
     });
 
-    /*
-    |----------------------------------------------------------
-    | Products — /create wajib sebelum /{product}
-    |----------------------------------------------------------
-    */
+    // Products
     Route::get('/products', [ProductController::class, 'index'])
         ->middleware('role:Owner,Manajer Toko,Supervisor')
         ->name('products.index');
@@ -63,48 +55,38 @@ Route::middleware('auth')->group(function () {
         ->middleware('role:Owner')
         ->name('products.update');
 
-    Route::patch('/products/{product}', [ProductController::class, 'update']);
+    Route::patch('/products/{product}', [ProductController::class, 'update'])
+        ->middleware('role:Owner');
 
     Route::delete('/products/{product}', [ProductController::class, 'destroy'])
         ->middleware('role:Owner')
         ->name('products.destroy');
 
-    /*
-    |----------------------------------------------------------
-    | Stock — Pegawai Gudang & Manajer Toko
-    |----------------------------------------------------------
-    */
+    // Stock — Pegawai Gudang & Manajer Toko
+    Route::get('/stock', [StockController::class, 'index'])
+        ->middleware('role:Pegawai Gudang,Manajer Toko')
+        ->name('stock.index');
+
     Route::post('/stock', [StockController::class, 'store'])
         ->middleware('role:Pegawai Gudang,Manajer Toko')
         ->name('stock.store');
 
-    /*
-    |----------------------------------------------------------
-    | Transactions
-    |----------------------------------------------------------
-    */
+    // Transactions — view
     Route::get('/transactions', [TransactionController::class, 'index'])
         ->middleware('role:Owner,Manajer Toko,Supervisor')
         ->name('transactions.index');
 
+    // Transactions — store (Kasir only)
     Route::post('/transactions', [TransactionController::class, 'store'])
         ->middleware('role:Kasir')
         ->name('transactions.store');
 
-    /*
-    |----------------------------------------------------------
-    | POS — Kasir
-    |----------------------------------------------------------
-    */
+    // POS — Kasir only
     Route::get('/pos', [TransactionController::class, 'pos'])
         ->middleware('role:Kasir')
         ->name('pos');
 
-    /*
-    |----------------------------------------------------------
-    | Reports — Owner & Manajer Toko
-    |----------------------------------------------------------
-    */
+    // Reports — Owner & Manajer Toko
     Route::middleware('role:Owner,Manajer Toko')->group(function () {
         Route::get('/reports/transactions', [ReportController::class, 'transactions'])
             ->name('reports.transactions');

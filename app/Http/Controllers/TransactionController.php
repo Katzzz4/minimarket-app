@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Branch;
 use App\Models\Product;
 use App\Models\ProductStock;
 use App\Models\Transaction;
@@ -9,10 +10,32 @@ use App\Models\TransactionItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
-use App\Models\Branch;
 
 class TransactionController extends Controller
 {
+    public function index(Request $request)
+    {
+        $transactions = Transaction::with('branch', 'user', 'items.product')
+            ->when(auth()->user()->hasRole('Manajer Toko'), function ($q) {
+                $q->where('branch_id', auth()->user()->branch_id);
+            })
+            ->when(auth()->user()->hasRole('Supervisor'), function ($q) {
+                $q->where('branch_id', auth()->user()->branch_id);
+            })
+            ->when($request->filled('start_date'), function ($q) use ($request) {
+                $q->whereDate('created_at', '>=', $request->start_date);
+            })
+            ->when($request->filled('end_date'), function ($q) use ($request) {
+                $q->whereDate('created_at', '<=', $request->end_date);
+            })
+            ->latest()
+            ->paginate(20);
+
+        $branches = auth()->user()->hasRole('Owner') ? Branch::all() : collect();
+
+        return view('transactions.index', compact('transactions', 'branches'));
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -68,35 +91,13 @@ class TransactionController extends Controller
                 $transaction->items()->create($data);
             }
 
-            return redirect()->route('transactions.index')->with('success', 'Transaksi berhasil. Invoice: ' . $transaction->invoice_number);
+            return redirect()->route('pos')->with('success', 'Transaksi berhasil. Invoice: ' . $transaction->invoice_number);
         });
-    }
-    public function index(Request $request)
-    {
-        $transactions = Transaction::with('branch', 'user', 'items.product')
-            ->when(auth()->user()->hasRole('Manajer Toko'), function ($q) {
-                $q->where('branch_id', auth()->user()->branch_id);
-            })
-            ->when(auth()->user()->hasRole('Supervisor'), function ($q) {
-                $q->where('branch_id', auth()->user()->branch_id);
-            })
-            ->when($request->filled('start_date'), function ($q) use ($request) {
-                $q->whereDate('created_at', '>=', $request->start_date);
-            })
-            ->when($request->filled('end_date'), function ($q) use ($request) {
-                $q->whereDate('created_at', '<=', $request->end_date);
-            })
-            ->latest()
-            ->paginate(20);
-
-        $branches = auth()->user()->hasRole('Owner') ? Branch::all() : collect();
-
-        return view('transactions.index', compact('transactions', 'branches'));
     }
 
     public function pos()
     {
-        $products = \App\Models\ProductStock::with('product')
+        $products = ProductStock::with('product')
             ->where('branch_id', auth()->user()->branch_id)
             ->where('quantity', '>', 0)
             ->get();

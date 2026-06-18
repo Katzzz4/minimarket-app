@@ -1,6 +1,31 @@
 <x-app-layout>
     <x-slot name="title">Point of Sale</x-slot>
 
+    {{-- Toast notifikasi --}}
+    @if(session('success'))
+    <div
+        id="toast-success"
+        class="fixed top-6 right-6 z-50 flex items-center gap-3 bg-white border border-green-200 shadow-lg rounded-xl px-5 py-4 text-sm"
+    >
+        <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center shrink-0">
+            <i class="fa-solid fa-check text-green-600 text-xs"></i>
+        </div>
+        <div>
+            <p class="font-semibold text-gray-800">Transaksi Berhasil</p>
+            <p class="text-xs text-gray-500 mt-0.5">{{ session('success') }}</p>
+        </div>
+        <button onclick="document.getElementById('toast-success').remove()" class="ml-2 text-gray-300 hover:text-gray-500">
+            <i class="fa-solid fa-xmark"></i>
+        </button>
+    </div>
+    <script>
+        setTimeout(() => {
+            const el = document.getElementById('toast-success');
+            if (el) el.remove();
+        }, 4000);
+    </script>
+    @endif
+
     <div class="grid grid-cols-3 gap-6">
 
         {{-- Daftar Produk --}}
@@ -15,7 +40,7 @@
             </div>
 
             <div class="grid grid-cols-3 gap-3" id="product-grid">
-                @foreach($products as $stock)
+                @forelse($products as $stock)
                 <div
                     class="product-card bg-white border border-gray-200 rounded-xl p-4 cursor-pointer hover:border-blue-400 hover:shadow-sm transition-all"
                     data-id="{{ $stock->product->id }}"
@@ -30,7 +55,12 @@
                         Rp {{ number_format($stock->product->price, 0, ',', '.') }}
                     </div>
                 </div>
-                @endforeach
+                @empty
+                <div class="col-span-3 py-10 text-center text-gray-300">
+                    <i class="fa-solid fa-box-open text-2xl mb-2 block"></i>
+                    Tidak ada produk tersedia
+                </div>
+                @endforelse
             </div>
         </div>
 
@@ -135,7 +165,6 @@
 
         function renderCart() {
             const container = document.getElementById('cart-items');
-            const emptyMsg = document.getElementById('empty-msg');
             const keys = Object.keys(cart);
 
             total = 0;

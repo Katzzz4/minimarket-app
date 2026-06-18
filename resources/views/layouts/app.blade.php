@@ -31,7 +31,7 @@
 
                 <a href="{{ route('dashboard') }}"
                     class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm mb-1
-                {{ request()->routeIs('dashboard') ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-100' }}">
+                    {{ request()->routeIs('dashboard') ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-100' }}">
                     <i class="fa-solid fa-house w-4 text-center"></i> Dashboard
                 </a>
 
@@ -39,18 +39,26 @@
                 @hasanyrole('Owner|Manajer Toko|Supervisor')
                 <a href="{{ route('transactions.index') }}"
                     class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm mb-1
-                {{ request()->routeIs('transactions.*') ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-100' }}">
+                    {{ request()->routeIs('transactions.*') ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-100' }}">
                     <i class="fa-solid fa-receipt w-4 text-center"></i> Transaksi
                 </a>
                 @endhasanyrole
 
-                <p class="text-xs text-gray-400 uppercase font-semibold px-2 mt-4 mb-2">Manajemen</p>
+                {{-- POS: Kasir --}}
+                @role('Kasir')
+                <a href="{{ route('pos') }}"
+                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm mb-1
+                    {{ request()->routeIs('pos') ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-100' }}">
+                    <i class="fa-solid fa-cash-register w-4 text-center"></i> Point of Sale
+                </a>
+                @endrole
 
-                {{-- Produk: semua role kecuali Kasir & Pegawai Gudang --}}
+                {{-- Manajemen: Owner, Manajer Toko, Supervisor --}}
                 @hasanyrole('Owner|Manajer Toko|Supervisor')
+                <p class="text-xs text-gray-400 uppercase font-semibold px-2 mt-4 mb-2">Manajemen</p>
                 <a href="{{ route('products.index') }}"
                     class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm mb-1
-                {{ request()->routeIs('products.*') ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-100' }}">
+                    {{ request()->routeIs('products.*') ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-100' }}">
                     <i class="fa-solid fa-box w-4 text-center"></i> Produk
                 </a>
                 @endhasanyrole
@@ -59,34 +67,37 @@
                 @role('Owner')
                 <a href="{{ route('branches.index') }}"
                     class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm mb-1
-                {{ request()->routeIs('branches.*') ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-100' }}">
+                    {{ request()->routeIs('branches.*') ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-100' }}">
                     <i class="fa-solid fa-store w-4 text-center"></i> Cabang
                 </a>
                 <a href="{{ route('users.index') }}"
                     class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm mb-1
-                {{ request()->routeIs('users.*') ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-100' }}">
+                    {{ request()->routeIs('users.*') ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-100' }}">
                     <i class="fa-solid fa-users w-4 text-center"></i> Pegawai
                 </a>
                 @endrole
 
-                @role('Kasir')
-                <a href="{{ route('pos') }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm mb-1
-                {{ request()->routeIs('pos') ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-100' }}">
-                    <i class="fa-solid fa-cash-register w-4 text-center"></i> Point of Sale
+                {{-- Gudang: Manajer Toko & Pegawai Gudang --}}
+                @hasanyrole('Manajer Toko|Pegawai Gudang')
+                <p class="text-xs text-gray-400 uppercase font-semibold px-2 mt-4 mb-2">Gudang</p>
+                <a href="{{ route('stock.index') }}"
+                    class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm mb-1
+                    {{ request()->routeIs('stock.*') ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-100' }}">
+                    <i class="fa-solid fa-boxes-stacked w-4 text-center"></i> Kelola Stok
                 </a>
-                @endrole
+                @endhasanyrole
 
                 {{-- Laporan: Owner & Manajer Toko --}}
                 @hasanyrole('Owner|Manajer Toko')
                 <p class="text-xs text-gray-400 uppercase font-semibold px-2 mt-4 mb-2">Laporan</p>
                 <a href="{{ route('reports.transactions') }}"
                     class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm mb-1
-                {{ request()->routeIs('reports.transactions') ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-100' }}">
+                    {{ request()->routeIs('reports.transactions') ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-100' }}">
                     <i class="fa-solid fa-file-invoice w-4 text-center"></i> Laporan Transaksi
                 </a>
                 <a href="{{ route('reports.stock') }}"
                     class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm mb-1
-                {{ request()->routeIs('reports.stock') ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-100' }}">
+                    {{ request()->routeIs('reports.stock') ? 'bg-blue-50 text-blue-600 font-medium' : 'text-gray-600 hover:bg-gray-100' }}">
                     <i class="fa-solid fa-print w-4 text-center"></i> Laporan Stok
                 </a>
                 @endhasanyrole
