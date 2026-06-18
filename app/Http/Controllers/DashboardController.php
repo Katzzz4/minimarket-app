@@ -64,22 +64,42 @@ class DashboardController extends Controller
 
     private function branchDashboard($branchId)
     {
-        $today = Carbon::today();
+        $user = auth()->user();
+
+        // Kasir: hanya tampil pesan selamat datang + shift info
+        if ($user->hasRole('Kasir')) {
+            return view('dashboard.kasir');
+        }
+
+        // Pegawai Gudang: tampil ringkasan stok cabang
+        if ($user->hasRole('Pegawai Gudang')) {
+            $lowStocks = \App\Models\ProductStock::with('product')
+                ->where('branch_id', $branchId)
+                ->whereColumn('quantity', '<=', 'min_stock')
+                ->get();
+
+            $totalProducts = \App\Models\ProductStock::where('branch_id', $branchId)->count();
+
+            return view('dashboard.gudang', compact('lowStocks', 'totalProducts'));
+        }
+
+        // Manajer Toko & Supervisor
+        $today = \Illuminate\Support\Carbon::today();
 
         $summary = [
-            'total_sales_today' => Transaction::where('branch_id', $branchId)
+            'total_sales_today' => \App\Models\Transaction::where('branch_id', $branchId)
                 ->whereDate('created_at', $today)
                 ->sum('total'),
-            'total_transactions_today' => Transaction::where('branch_id', $branchId)
+            'total_transactions_today' => \App\Models\Transaction::where('branch_id', $branchId)
                 ->whereDate('created_at', $today)
                 ->count(),
-            'low_stock_products' => ProductStock::with('product')
+            'low_stock_products' => \App\Models\ProductStock::with('product')
                 ->where('branch_id', $branchId)
                 ->whereColumn('quantity', '<=', 'min_stock')
                 ->get(),
         ];
 
-        $recentTransactions = Transaction::with('user')
+        $recentTransactions = \App\Models\Transaction::with('user')
             ->where('branch_id', $branchId)
             ->latest()
             ->take(10)

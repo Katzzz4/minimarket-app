@@ -4,11 +4,12 @@ namespace App\Providers;
 
 use App\Models\Transaction;
 use App\Models\StockMovement;
-use App\Models\ProductStock;
 use App\Observers\TransactionObserver;
 use App\Observers\StockMovementObserver;
-use App\Observers\ProductStockObserver;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
+use Carbon\Carbon;
+
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -25,8 +26,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Carbon::setLocale('id');
+        setlocale(LC_TIME, 'id_ID');
+
         Transaction::observe(TransactionObserver::class);
         StockMovement::observe(StockMovementObserver::class);
-        // ProductStock::observe(ProductStockObserver::class);
     }
 }
