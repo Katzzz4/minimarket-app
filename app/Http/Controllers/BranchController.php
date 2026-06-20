@@ -6,6 +6,7 @@ use App\Models\Branch;
 use Illuminate\Http\Request;
 use App\Models\ProductStock;
 use App\Models\User;
+use App\Models\Transaction;
 
 class BranchController extends Controller
 {
@@ -61,7 +62,39 @@ class BranchController extends Controller
             ->where('branch_id', $branch->id)
             ->get();
 
-        return view('branches.show', compact('branch', 'stocks', 'employees'));
+        // Penjualan
+        $totalSalesToday = Transaction::where('branch_id', $branch->id)
+            ->whereDate('created_at', today())
+            ->sum('total');
+
+        $totalTransactionsToday = Transaction::where('branch_id', $branch->id)
+            ->whereDate('created_at', today())
+            ->count();
+
+        $totalSalesMonth = Transaction::where('branch_id', $branch->id)
+            ->whereMonth('created_at', now()->month)
+            ->whereYear('created_at', now()->year)
+            ->sum('total');
+
+        $totalSalesAll = Transaction::where('branch_id', $branch->id)
+            ->sum('total');
+
+        $recentTransactions = Transaction::with('user')
+            ->where('branch_id', $branch->id)
+            ->latest()
+            ->take(5)
+            ->get();
+
+        return view('branches.show', compact(
+            'branch',
+            'stocks',
+            'employees',
+            'totalSalesToday',
+            'totalTransactionsToday',
+            'totalSalesMonth',
+            'totalSalesAll',
+            'recentTransactions'
+        ));
     }
 
     public function destroy(Branch $branch)
