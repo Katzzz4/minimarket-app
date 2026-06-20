@@ -10,10 +10,27 @@ use Spatie\Permission\Models\Role;
 
 class UserController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $users = User::with('branch', 'roles')->latest()->paginate(10);
-        return view('users.index', compact('users'));
+        $users = User::with('branch', 'roles')
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%')
+                    ->orWhere('email', 'like', '%' . $request->search . '%');
+            })
+            ->when($request->filled('role'), function ($q) use ($request) {
+                $q->whereHas('roles', function ($r) use ($request) {
+                    $r->where('name', $request->role);
+                });
+            })
+            ->when($request->filled('branch_id'), function ($q) use ($request) {
+                $q->where('branch_id', $request->branch_id);
+            })
+            ->latest()
+            ->paginate(10);
+
+        $branches = \App\Models\Branch::all();
+
+        return view('users.index', compact('users', 'branches'));
     }
 
     public function create()

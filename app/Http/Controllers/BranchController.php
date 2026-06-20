@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Branch;
 use Illuminate\Http\Request;
+use App\Models\ProductStock;
+use App\Models\User;
 
 class BranchController extends Controller
 {
@@ -47,6 +49,19 @@ class BranchController extends Controller
         $branch->update($validated);
 
         return redirect()->route('branches.index')->with('success', 'Cabang berhasil diperbarui.');
+    }
+
+    public function show(Branch $branch)
+    {
+        $stocks = ProductStock::with('product.category')
+            ->where('branch_id', $branch->id)
+            ->get();
+
+        $employees = User::with('roles')
+            ->where('branch_id', $branch->id)
+            ->get();
+
+        return view('branches.show', compact('branch', 'stocks', 'employees'));
     }
 
     public function destroy(Branch $branch)
