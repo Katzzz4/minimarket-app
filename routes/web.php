@@ -64,11 +64,11 @@ Route::middleware('auth')->group(function () {
 
     // Stock — Pegawai Gudang & Manajer Toko
     Route::get('/stock', [StockController::class, 'index'])
-        ->middleware('role:Pegawai Gudang,Manajer Toko')
+        ->middleware('role:Pegawai Gudang')
         ->name('stock.index');
 
     Route::post('/stock', [StockController::class, 'store'])
-        ->middleware('role:Pegawai Gudang,Manajer Toko')
+        ->middleware('role:Pegawai Gudang')
         ->name('stock.store');
 
     // Transactions — view

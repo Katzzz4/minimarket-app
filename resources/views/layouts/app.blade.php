@@ -77,8 +77,8 @@
                 </a>
                 @endrole
 
-                {{-- Gudang: Manajer Toko & Pegawai Gudang --}}
-                @hasanyrole('Manajer Toko|Pegawai Gudang')
+                {{-- Pegawai Gudang --}}
+                @hasanyrole('Pegawai Gudang')
                 <p class="text-xs text-gray-400 uppercase font-semibold px-2 mt-4 mb-2">Gudang</p>
                 <a href="{{ route('stock.index') }}"
                     class="flex items-center gap-3 px-3 py-2 rounded-lg text-sm mb-1

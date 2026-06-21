@@ -10,9 +10,29 @@ use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::with('category')->latest()->paginate(10);
+        $user     = auth()->user();
+        $branchId = $user->branch_id;
+
+        $products = Product::with(['category', 'stocks' => function ($q) use ($user, $branchId) {
+                if (!$user->hasRole('Owner')) {
+                    $q->where('branch_id', $branchId);
+                }
+            }])
+            ->when(!$user->hasRole('Owner'), function ($q) use ($branchId) {
+                $q->whereHas('stocks', fn($s) => $s->where('branch_id', $branchId));
+            })
+            ->when($request->filled('search'), function ($q) use ($request) {
+                $q->where(function ($q) use ($request) {
+                    $q->where('name', 'like', '%' . $request->search . '%')
+                      ->orWhere('sku', 'like', '%' . $request->search . '%');
+                });
+            })
+            ->latest()
+            ->paginate(10)
+            ->withQueryString();
+
         return view('products.index', compact('products'));
     }
 
@@ -25,21 +45,21 @@ class ProductController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'sku' => 'required|string|unique:products,sku',
+            'name'        => 'required|string|max:255',
+            'sku'         => 'required|string|unique:products,sku',
             'category_id' => 'nullable|exists:categories,id',
-            'price' => 'required|numeric|min:0',
-            'cost_price' => 'required|numeric|min:0',
+            'price'       => 'required|numeric|min:0',
+            'cost_price'  => 'required|numeric|min:0',
         ]);
 
         $product = Product::create($validated);
 
-        // inisialisasi stok 0 di semua cabang
+        // Inisialisasi stok 0 di semua cabang
         Branch::all()->each(function ($branch) use ($product) {
             ProductStock::create([
                 'product_id' => $product->id,
-                'branch_id' => $branch->id,
-                'quantity' => 0,
+                'branch_id'  => $branch->id,
+                'quantity'   => 0,
             ]);
         });
 
@@ -48,7 +68,26 @@ class ProductController extends Controller
 
     public function show(Product $product)
     {
-        $product->load('category', 'stocks.branch');
+        $user     = auth()->user();
+        $branchId = $user->branch_id;
+
+        // Manajer & Supervisor hanya boleh lihat produk cabang mereka
+        if (!$user->hasRole('Owner')) {
+            $hasStock = $product->stocks()
+                ->where('branch_id', $branchId)
+                ->exists();
+
+            if (!$hasStock) {
+                abort(403, 'Produk ini tidak tersedia di cabang Anda.');
+            }
+
+            $product->load(['category', 'stocks' => function ($q) use ($branchId) {
+                $q->where('branch_id', $branchId)->with('branch');
+            }]);
+        } else {
+            $product->load('category', 'stocks.branch');
+        }
+
         return view('products.show', compact('product'));
     }
 
@@ -61,11 +100,11 @@ class ProductController extends Controller
     public function update(Request $request, Product $product)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'sku' => 'required|string|unique:products,sku,' . $product->id,
+            'name'        => 'required|string|max:255',
+            'sku'         => 'required|string|unique:products,sku,' . $product->id,
             'category_id' => 'nullable|exists:categories,id',
-            'price' => 'required|numeric|min:0',
-            'cost_price' => 'required|numeric|min:0',
+            'price'       => 'required|numeric|min:0',
+            'cost_price'  => 'required|numeric|min:0',
         ]);
 
         $product->update($validated);
@@ -75,7 +114,7 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
-        $product->delete(); // product_stocks ikut terhapus via cascadeOnDelete
+        $product->delete();
         return redirect()->route('products.index')->with('success', 'Produk dihapus.');
     }
 }
